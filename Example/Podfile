@@ -1,0 +1,12 @@
+use_frameworks!
+
+target 'EmptyView_Example' do
+  pod 'EmptyView', :path => '../'
+
+  target 'EmptyView_Tests' do
+    inherit! :search_paths
+
+    pod 'Specta'
+  pod 'Expecta'
+  end
+end

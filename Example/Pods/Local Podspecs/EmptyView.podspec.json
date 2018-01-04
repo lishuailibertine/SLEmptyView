@@ -1,0 +1,26 @@
+{
+  "name": "EmptyView",
+  "version": "0.1.0",
+  "summary": "A short description of EmptyView.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/lishuailibertine/EmptyView",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "lishuailibertine": "lishuai@touker.com"
+  },
+  "source": {
+    "git": "https://github.com/lishuailibertine/EmptyView.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "EmptyView/HBClasses/**/*",
+  "resources": [
+    "EmptyView/HBResources/*.xib",
+    "EmptyView/HBResources/**/*.png"
+  ]
+}

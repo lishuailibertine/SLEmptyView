@@ -1,0 +1,22 @@
+PODS:
+  - EmptyView (0.1.0)
+  - Expecta (1.0.6)
+  - Specta (1.0.7)
+
+DEPENDENCIES:
+  - EmptyView (from `../`)
+  - Expecta
+  - Specta
+
+EXTERNAL SOURCES:
+  EmptyView:
+    :path: ../
+
+SPEC CHECKSUMS:
+  EmptyView: 149227d07f1740fd8f33151316f8dd2affe9d153
+  Expecta: 3b6bd90a64b9a1dcb0b70aa0e10a7f8f631667d5
+  Specta: 3e1bd89c3517421982dc4d1c992503e48bd5fe66
+
+PODFILE CHECKSUM: c3b14e72a27b81190b465c352e3e05d65bcc6ce6
+
+COCOAPODS: 1.3.1
