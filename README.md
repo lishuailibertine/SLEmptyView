@@ -11,4 +11,4 @@
  >针对网络异常、接口异常会默认两种展示type(可以再新增),这样是为了对业务的定制性更高；
 
 ### 简单效果图
-![img](https://github.com/lishuailibertine/SLEmptyView/EmptyView.gif) 
+![img](https://github.com/lishuailibertine/SLEmptyView/blob/master/EmptyView.gif) 
