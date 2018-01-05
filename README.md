@@ -9,3 +9,6 @@
  >布局是通过xib，这样修改起来比较容易,用纯代码的Autolayout布局也行就是太繁琐；
 
  >针对网络异常、接口异常会默认两种展示type(可以再新增),这样是为了对业务的定制性更高；
+
+### 简单效果图
+![img](https://github.com/lishuailibertine/SLEmptyView/EmptyView.gif) 
