@@ -13,6 +13,9 @@ static const char * kEmptyDataDelegate ="kEmptyDataDelegate";
 static const char * kEmptyReloadDataIMP ="kEmptyReloadDataIMP";
 static const char * kEmptyContentView ="kEmptyContentView";
 static const char * kEmptyViewType ="kEmptyViewType";
+@interface UIColor (HBEmptyView)
++ (UIColor *)hb_colorWithHexString:(NSString *)color alpha:(CGFloat)alpha;
+@end
 @interface UIImage (HBEmptyView)
 + (instancetype)hb_imagePathWithName:(NSString *)imageName targetClass:(Class)targetClass;
 @end
@@ -100,14 +103,14 @@ static const char * kEmptyViewType ="kEmptyViewType";
 }
 - (NSDictionary *)title_data
 {
-    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor blackColor] text:@"网络不给力呀"],
-             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor blackColor] text:@"页面访问失败"]
+    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1] text:@"网络不给力呀"],
+             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1]  text:@"页面访问失败"]
              };
 }
 - (NSDictionary *)subtitle_data
 {
-    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor blackColor] text:@"请检查一下网络再试试吧"],
-             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor blackColor] text:@"点击重新加载再试试吧"]
+    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888 " alpha:1] text:@"请检查一下网络再试试吧"],
+             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888" alpha:1] text:@"点击重新加载再试试吧"]
              };
 }
 - (void)reloadEmptyView
@@ -126,8 +129,8 @@ static const char * kEmptyViewType ="kEmptyViewType";
             titleAttributedString =[[self title_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
         }
         NSAttributedString *subTitleAttributedString;
-        if ([self emptyView_title]) {
-            subTitleAttributedString =[self emptyView_title];
+        if ([self emptyView_subtitle]) {
+            subTitleAttributedString =[self emptyView_subtitle];
         }else{
             subTitleAttributedString =[[self subtitle_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
         }
@@ -148,7 +151,11 @@ static const char * kEmptyViewType ="kEmptyViewType";
             [self.emptyContentView.imageView.layer removeAnimationForKey:kEmptyImageViewAnimationKey];
             self.emptyContentView.imageView.image =image;
         }
+        self.scrollEnabled = NO;
         [self addSubview:self.emptyContentView];
+    }else
+    {
+        [self removeEmptyView];
     }
 }
 - (NSAttributedString *)defaultTitle_emptyViewWithFontSize:(int)size
@@ -176,6 +183,7 @@ static const char * kEmptyViewType ="kEmptyViewType";
 - (void)removeEmptyView
 {
     [self.emptyContentView removeFromSuperview];
+    self.scrollEnabled = YES;
 }
 #pragma mark -private
 #pragma mark - Delegate Getters & Events
@@ -196,7 +204,7 @@ static const char * kEmptyViewType ="kEmptyViewType";
 - (void)emptyView_didTapButton:(id)sender
 {
     if (self.emptyDataDelegate && [self.emptyDataDelegate respondsToSelector:@selector(emptyView:didTapButton:)]) {
-       [self.emptyDataDelegate emptyView:self didTapButton:sender];
+        [self.emptyDataDelegate emptyView:self didTapButton:sender];
     }
 }
 - (UIImage *)emptyView_image
@@ -216,7 +224,7 @@ static const char * kEmptyViewType ="kEmptyViewType";
 - (NSAttributedString *)emptyView_subtitle
 {
     if (self.emptyDataSource && [self.emptyDataSource respondsToSelector:@selector(subTitleForEmptyView:)]) {
-       return [self.emptyDataSource subTitleForEmptyView:self];
+        return [self.emptyDataSource subTitleForEmptyView:self];
     }
     return nil;
 }
@@ -310,7 +318,7 @@ void originalImplementation(id self, SEL _cmd)
     [super layoutSubviews];
     self.tagBtn.layer.cornerRadius =4.f;
     self.tagBtn.layer.borderWidth =.5f;
-    self.tagBtn.layer.borderColor =[UIColor blackColor].CGColor;
+    self.tagBtn.layer.borderColor =[UIColor hb_colorWithHexString:@"#E4E4E4" alpha:1].CGColor;
 }
 - (IBAction)tagEvent:(id)sender {
     if (self.tagCallback) {
@@ -330,3 +338,51 @@ void originalImplementation(id self, SEL _cmd)
 }
 @end
 
+@implementation UIColor (HBEmptyView)
+
++ (UIColor *)hb_colorWithHexString:(NSString *)color alpha:(CGFloat)alpha
+{
+    //删除字符串中的空格
+    NSString *cString = [[color stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
+    // String should be 6 or 8 characters
+    if ([cString length] < 6)
+    {
+        return [UIColor clearColor];
+    }
+    // strip 0X if it appears
+    //如果是0x开头的，那么截取字符串，字符串从索引为2的位置开始，一直到末尾
+    if ([cString hasPrefix:@"0X"])
+    {
+        cString = [cString substringFromIndex:2];
+    }
+    //如果是#开头的，那么截取字符串，字符串从索引为1的位置开始，一直到末尾
+    if ([cString hasPrefix:@"#"])
+    {
+        cString = [cString substringFromIndex:1];
+    }
+    if ([cString length] != 6)
+    {
+        return [UIColor clearColor];
+    }
+    
+    // Separate into r, g, b substrings
+    NSRange range;
+    range.location = 0;
+    range.length = 2;
+    //r
+    NSString *rString = [cString substringWithRange:range];
+    //g
+    range.location = 2;
+    NSString *gString = [cString substringWithRange:range];
+    //b
+    range.location = 4;
+    NSString *bString = [cString substringWithRange:range];
+    
+    // Scan values
+    unsigned int r, g, b;
+    [[NSScanner scannerWithString:rString] scanHexInt:&r];
+    [[NSScanner scannerWithString:gString] scanHexInt:&g];
+    [[NSScanner scannerWithString:bString] scanHexInt:&b];
+    return [UIColor colorWithRed:((float)r / 255.0f) green:((float)g / 255.0f) blue:((float)b / 255.0f) alpha:alpha];
+}
+@end
