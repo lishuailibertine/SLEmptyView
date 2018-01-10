@@ -37,17 +37,31 @@
                             </constraints>
                         </view>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lH7-ni-LwL">
-                            <rect key="frame" x="219" y="280" width="0.0" height="0.0"/>
-                            <attributedString key="attributedText"/>
+                            <rect key="frame" x="177" y="280" width="84" height="17"/>
+                            <attributedString key="attributedText">
+                                <fragment content="请检查网络连接">
+                                    <attributes>
+                                        <font key="NSFont" size="12" name="PingFangSC-Regular"/>
+                                        <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural" tighteningFactorForTruncation="0.0"/>
+                                    </attributes>
+                                </fragment>
+                            </attributedString>
                             <nil key="highlightedColor"/>
                         </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="loading_image.png" translatesAutoresizingMaskIntoConstraints="NO" id="v5e-6T-dcM">
+                            <rect key="frame" x="197.5" y="301" width="16" height="14.5"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="16" id="16E-2h-Ikh"/>
+                                <constraint firstAttribute="height" constant="14.5" id="XMb-MP-1Gg"/>
+                            </constraints>
+                        </imageView>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FbD-fV-A6u">
-                            <rect key="frame" x="219" y="290" width="0.0" height="0.0"/>
+                            <rect key="frame" x="218.5" y="307.5" width="0.0" height="0.0"/>
                             <attributedString key="attributedText"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pTl-Ui-4US">
-                            <rect key="frame" x="125.5" y="305" width="185" height="44"/>
+                        <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pTl-Ui-4US">
+                            <rect key="frame" x="125.5" y="322.5" width="185" height="44"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="185" id="1pL-BR-ToQ"/>
                                 <constraint firstAttribute="height" constant="44" id="XNb-C4-bmY"/>
@@ -65,7 +79,7 @@
                     <constraints>
                         <constraint firstItem="FbD-fV-A6u" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="PzE-53-wI1" secondAttribute="leading" constant="50" id="Ftt-pb-Cf3"/>
                         <constraint firstItem="lqC-Ug-Kiy" firstAttribute="leading" secondItem="PzE-53-wI1" secondAttribute="leading" id="GwY-Ja-286"/>
-                        <constraint firstItem="FbD-fV-A6u" firstAttribute="top" secondItem="lH7-ni-LwL" secondAttribute="bottom" constant="10" id="HFq-7A-Unq"/>
+                        <constraint firstItem="FbD-fV-A6u" firstAttribute="top" secondItem="lH7-ni-LwL" secondAttribute="bottom" constant="10.5" id="HFq-7A-Unq"/>
                         <constraint firstAttribute="trailing" secondItem="lqC-Ug-Kiy" secondAttribute="trailing" id="HOE-kP-bjp"/>
                         <constraint firstItem="pTl-Ui-4US" firstAttribute="centerX" secondItem="PzE-53-wI1" secondAttribute="centerX" id="IDs-fo-GNm"/>
                         <constraint firstItem="pTl-Ui-4US" firstAttribute="top" secondItem="FbD-fV-A6u" secondAttribute="bottom" constant="15" id="KaW-NI-Y5e"/>
@@ -75,8 +89,10 @@
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="lH7-ni-LwL" secondAttribute="trailing" constant="50" id="Uh4-I4-Vzc"/>
                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="FbD-fV-A6u" secondAttribute="trailing" constant="50" id="YQJ-UF-cZ7"/>
                         <constraint firstItem="lH7-ni-LwL" firstAttribute="top" secondItem="lqC-Ug-Kiy" secondAttribute="bottom" constant="30" id="d7k-V7-a50"/>
+                        <constraint firstItem="FbD-fV-A6u" firstAttribute="centerY" secondItem="v5e-6T-dcM" secondAttribute="centerY" id="dJc-Ob-4Rh"/>
                         <constraint firstItem="FbD-fV-A6u" firstAttribute="centerX" secondItem="PzE-53-wI1" secondAttribute="centerX" id="lhi-qs-qFd"/>
                         <constraint firstItem="lqC-Ug-Kiy" firstAttribute="centerX" secondItem="PzE-53-wI1" secondAttribute="centerX" id="plc-qB-V7u"/>
+                        <constraint firstItem="FbD-fV-A6u" firstAttribute="leading" secondItem="v5e-6T-dcM" secondAttribute="trailing" constant="5" id="yn4-Jo-zbL"/>
                     </constraints>
                 </view>
             </subviews>
@@ -89,15 +105,17 @@
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <connections>
-                <outlet property="backgroundView" destination="PzE-53-wI1" id="8s8-yB-Oyy"/>
-                <outlet property="imageHightConstraint" destination="k6w-mx-wjd" id="1CC-Sd-vCx"/>
-                <outlet property="imageView" destination="EOW-Yi-5BT" id="5hg-qG-TAr"/>
-                <outlet property="imageWightConstraint" destination="Uc1-VA-lmC" id="mm0-B2-fR1"/>
-                <outlet property="subTitleLabel" destination="FbD-fV-A6u" id="XgO-Hv-oBh"/>
-                <outlet property="tagBtn" destination="pTl-Ui-4US" id="4TP-27-xAw"/>
-                <outlet property="titleLabel" destination="lH7-ni-LwL" id="r3T-jI-nTQ"/>
+                <outlet property="backgroundView" destination="PzE-53-wI1" id="Yla-DE-hyx"/>
+                <outlet property="imageView" destination="EOW-Yi-5BT" id="M8I-Gz-PMH"/>
+                <outlet property="loadImageView" destination="v5e-6T-dcM" id="1H1-S6-Zpq"/>
+                <outlet property="subTitleLabel" destination="FbD-fV-A6u" id="Unj-fb-jWz"/>
+                <outlet property="tagBtn" destination="pTl-Ui-4US" id="Ofc-P0-QvU"/>
+                <outlet property="titleLabel" destination="lH7-ni-LwL" id="kFu-In-YqL"/>
             </connections>
             <point key="canvasLocation" x="66.5" y="302.5"/>
         </view>
     </objects>
+    <resources>
+        <image name="loading_image.png" width="21" height="19"/>
+    </resources>
 </document>

@@ -9,7 +9,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Empty Data Delegate-->
+        <!--View Controller-->
         <scene sceneID="wQg-tq-qST">
             <objects>
                 <viewController id="whP-gf-Uak" customClass="HBViewController" sceneMemberID="viewController">
@@ -25,10 +25,8 @@
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <connections>
-                                    <outlet property="dataSource" destination="whP-gf-Uak" id="wx2-6i-het"/>
-                                    <outlet property="delegate" destination="whP-gf-Uak" id="uBs-E2-O2G"/>
-                                    <outlet property="emptyDataDelegate" destination="whP-gf-Uak" id="OWI-t9-otb"/>
-                                    <outlet property="emptyDataSource" destination="whP-gf-Uak" id="HfE-JD-xF3"/>
+                                    <outlet property="dataSource" destination="whP-gf-Uak" id="vpz-Hv-6Yb"/>
+                                    <outlet property="delegate" destination="whP-gf-Uak" id="fTr-mi-9lH"/>
                                 </connections>
                             </tableView>
                         </subviews>
@@ -40,7 +38,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="tableView" destination="0md-QM-eDO" id="7Ex-CP-yEv"/>
+                        <outlet property="tableView" destination="0md-QM-eDO" id="zkf-D2-J21"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tc2-Qw-aMS" userLabel="First Responder" sceneMemberID="firstResponder"/>

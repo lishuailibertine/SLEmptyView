@@ -7,33 +7,49 @@
 
 #import "UIScrollView+HBEmptyView.h"
 #import <objc/runtime.h>
+//默认loading动画对应的key
 #define kEmptyImageViewAnimationKey @"com.dzn.emptyDataSet.imageViewAnimation"
-static const char * kEmptyDataSource ="kEmptyDataSource";
-static const char * kEmptyDataDelegate ="kEmptyDataDelegate";
-static const char * kEmptyReloadDataIMP ="kEmptyReloadDataIMP";
+//关联空白页`HBEmptyContentView`对应的key
 static const char * kEmptyContentView ="kEmptyContentView";
+//关联空白页类型对象的key
 static const char * kEmptyViewType ="kEmptyViewType";
+//关联空白页数据模型key
+static const char * kEmptyViewModel ="kEmptyViewModel";
+//关联空白页点击执行task
+static const char * kEmptyViewLoadTask ="kEmptyViewLoadTask";
 @interface UIColor (HBEmptyView)
 + (UIColor *)hb_colorWithHexString:(NSString *)color alpha:(CGFloat)alpha;
 @end
+
 @interface UIImage (HBEmptyView)
+//获取image对象
 + (instancetype)hb_imagePathWithName:(NSString *)imageName targetClass:(Class)targetClass;
 @end
 @interface HBEmptyContentView : UIView
+//空页底部view
 @property (unsafe_unretained, nonatomic) IBOutlet UIView *backgroundView;
+//空页头部imageview
 @property (unsafe_unretained, nonatomic) IBOutlet UIImageView *imageView;
+//空页title描述
 @property (unsafe_unretained, nonatomic) IBOutlet UILabel *titleLabel;
+//空页subtitle描述
 @property (unsafe_unretained, nonatomic) IBOutlet UILabel *subTitleLabel;
+//空页bottom按钮(默认隐藏)
 @property (unsafe_unretained, nonatomic) IBOutlet UIButton *tagBtn;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *imageWightConstraint;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *imageHightConstraint;
+//空页手势
+@property (nonatomic, strong) UITapGestureRecognizer *tapGesture;
+//空页loading小图标imageview
+@property (weak, nonatomic) IBOutlet UIImageView *loadImageView;
 @property (nonatomic, strong) void(^tagCallback)(id sender);
 
+//初始化方法
 + (instancetype)createEmptyContentView:(CGRect)frame;
 @end
 
 @interface HBEmptyViewWeakObject : NSObject
+//弱饮用对象（此处为代理对象）
 @property (nonatomic, readonly, weak) id weakObject;
+//初始化方法 (输入参数为代理对象)
 - (instancetype)initWithWeakObject:(id)object;
 @end
 @implementation HBEmptyViewWeakObject
@@ -46,8 +62,15 @@ static const char * kEmptyViewType ="kEmptyViewType";
     return self;
 }
 @end
-@implementation UIScrollView (HBEmptyView)
-#pragma mark -setter getter
+static NSValue *_reloadDataIMP;
+
+typedef void(^LoadTask)(void);
+@interface UIScrollView (HBEmptyViewExtend)
+@property (nonatomic, readwrite) HBEmptyViewType emptyViewType;
+@property (nonatomic, readwrite) HBEmptyScrollModel *emptyViewModel;
+@property (nonatomic, readwrite) LoadTask loadTask;
+@end
+@implementation UIScrollView (HBEmptyViewExtend)
 - (HBEmptyViewType)emptyViewType
 {
     NSNumber * emptyViewType = objc_getAssociatedObject(self, kEmptyViewType);
@@ -55,108 +78,53 @@ static const char * kEmptyViewType ="kEmptyViewType";
 }
 - (void)setEmptyViewType:(HBEmptyViewType)emptyViewType
 {
-    objc_setAssociatedObject(self, kEmptyViewType,@(emptyViewType), OBJC_ASSOCIATION_ASSIGN);
+    objc_setAssociatedObject(self, kEmptyViewType,@(emptyViewType), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-- (id<HBEmptyDataSource>)emptyDataSource
+- (LoadTask)loadTask
 {
-    HBEmptyViewWeakObject * emptyViewWeakObject = objc_getAssociatedObject(self, kEmptyDataSource);
-    return  emptyViewWeakObject.weakObject;
+    return  objc_getAssociatedObject(self, kEmptyViewLoadTask);
 }
-- (void)setEmptyDataSource:(id<HBEmptyDataSource>)emptyDataSource
+- (void)setLoadTask:(LoadTask)loadTask
 {
-    [self hookSelector:@selector(reloadData)];
-    objc_setAssociatedObject(self, kEmptyDataSource,[[HBEmptyViewWeakObject alloc] initWithWeakObject:emptyDataSource], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kEmptyViewLoadTask,loadTask, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-- (id<HBEmptyDataDelegate>)emptyDataDelegate
+- (HBEmptyScrollModel *)emptyViewModel
 {
-    HBEmptyViewWeakObject * emptyViewWeakObject = objc_getAssociatedObject(self, kEmptyDataDelegate);
-    return  emptyViewWeakObject.weakObject;
-}
-- (void)setEmptyDataDelegate:(id<HBEmptyDataDelegate>)emptyDataDelegate
-{
-    [self hookSelector:@selector(reloadData)];
-    objc_setAssociatedObject(self, kEmptyDataDelegate,[[HBEmptyViewWeakObject alloc] initWithWeakObject:emptyDataDelegate], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-- (HBEmptyContentView *)emptyContentView
-{
-    HBEmptyContentView * emptyContentView = objc_getAssociatedObject(self, kEmptyContentView);
-    if (!emptyContentView) {
-        emptyContentView =[HBEmptyContentView createEmptyContentView:(CGRect){0,0,self.frame.size.width,self.frame.size.height}];
-        __weak typeof(self) this =self;
-        emptyContentView.tagCallback = ^(id sender) {
-            [this emptyView_didTapButton:sender];
-        };
-        objc_setAssociatedObject(self, kEmptyContentView,emptyContentView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    HBEmptyScrollModel * emptyViewModel = objc_getAssociatedObject(self, kEmptyViewModel);
+    if(!emptyViewModel){
+        emptyViewModel =[[HBEmptyScrollModel alloc] init];
+        emptyViewModel.title =[[self title_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
+        emptyViewModel.subTitle =[[self subtitle_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
+        emptyViewModel.headImage =[[self image_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
+        emptyViewModel.showLoadingImage =YES;
+        objc_setAssociatedObject(self, kEmptyViewModel,emptyViewModel, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    return emptyContentView;
+    return emptyViewModel;
 }
-- (void)setEmptyContentView:(HBEmptyContentView *)emptyContentView
+- (void)setEmptyViewModel:(HBEmptyScrollModel *)emptyViewModel
 {
-    objc_setAssociatedObject(self, kEmptyContentView,emptyContentView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kEmptyViewModel,emptyViewModel, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-#pragma mark -public
-#pragma mark - data
-- (NSDictionary *)image_data
+#pragma mark - data 配置默认数据源
+- (NSMutableDictionary *)image_data
 {
-    return @{@(HBEmptyViewType_Network):[UIImage hb_imagePathWithName:@"icon_网络不给力" targetClass:[self class]],
-             @(HBEmptyViewType_Interface):[UIImage hb_imagePathWithName:@"icon_访问失败" targetClass:[self class]]};
+    NSDictionary * imageData = @{@(HBEmptyViewType_Network):[UIImage hb_imagePathWithName:@"icon_网络不给力" targetClass:[self class]],
+                                 @(HBEmptyViewType_Interface):[UIImage hb_imagePathWithName:@"icon_访问失败" targetClass:[self class]]};
+    return [NSMutableDictionary dictionaryWithDictionary:imageData];
 }
-- (NSDictionary *)title_data
+- (NSMutableDictionary *)title_data
 {
-    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1] text:@"网络不给力呀"],
-             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1]  text:@"页面访问失败"]
-             };
+    NSDictionary *titleData = @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1] text:@"网络异常，请检查网络连接"],
+                                @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:16 textColor:[UIColor hb_colorWithHexString:@"#4A4A4A" alpha:1]  text:@"系统繁忙，请稍后再试"]
+                                };
+    return [NSMutableDictionary dictionaryWithDictionary:titleData];
 }
-- (NSDictionary *)subtitle_data
+- (NSMutableDictionary *)subtitle_data
 {
-    return @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888 " alpha:1] text:@"请检查一下网络再试试吧"],
-             @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888" alpha:1] text:@"点击重新加载再试试吧"]
-             };
-}
-- (void)reloadEmptyView
-{
-    if ([self emptyView_shouldDisplay]&&![self haveIterm]){
-        UIImage * image;
-        if ([self emptyView_image]) {
-            image=[self emptyView_image];
-        }else{
-            image=[[self image_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
-        }
-        NSAttributedString *titleAttributedString;
-        if ([self emptyView_title]) {
-            titleAttributedString =[self emptyView_title];
-        }else{
-            titleAttributedString =[[self title_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
-        }
-        NSAttributedString *subTitleAttributedString;
-        if ([self emptyView_subtitle]) {
-            subTitleAttributedString =[self emptyView_subtitle];
-        }else{
-            subTitleAttributedString =[[self subtitle_data] objectForKey:[NSNumber numberWithInt:self.emptyViewType]];
-        }
-        self.emptyContentView.imageView.image =image;
-        self.emptyContentView.titleLabel.attributedText =titleAttributedString;
-        self.emptyContentView.subTitleLabel.attributedText =subTitleAttributedString;
-        if ([self emptyView_loading]) {
-            self.emptyContentView.imageWightConstraint.constant =78;
-            self.emptyContentView.imageHightConstraint.constant =78;
-        }else{
-            self.emptyContentView.imageWightConstraint.constant =150;
-            self.emptyContentView.imageHightConstraint.constant =150;
-        }
-        if ([self emptyView_loading]) {
-            self.emptyContentView.imageView.image =[UIImage hb_imagePathWithName:@"loading_imgBlue_78x78" targetClass:[self class]];
-            [self.emptyContentView.imageView.layer addAnimation:[self imageAnimationForEmptyDataSet:self] forKey:kEmptyImageViewAnimationKey];
-        }else{
-            [self.emptyContentView.imageView.layer removeAnimationForKey:kEmptyImageViewAnimationKey];
-            self.emptyContentView.imageView.image =image;
-        }
-        self.scrollEnabled = NO;
-        [self addSubview:self.emptyContentView];
-    }else
-    {
-        [self removeEmptyView];
-    }
+    NSDictionary *subTitleData = @{@(HBEmptyViewType_Network):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888 " alpha:1] text:@"点击屏幕重新加载"],
+                                   @(HBEmptyViewType_Interface):[self defaultTitle_emptyViewWithFontSize:12 textColor:[UIColor hb_colorWithHexString:@"#888888" alpha:1] text:@"点击屏幕重新加载"]
+                                   };
+    return [NSMutableDictionary dictionaryWithDictionary:subTitleData];
 }
 - (NSAttributedString *)defaultTitle_emptyViewWithFontSize:(int)size
                                                  textColor:(UIColor *)textColor
@@ -170,63 +138,103 @@ static const char * kEmptyViewType ="kEmptyViewType";
     [attributes setObject:textcolor forKey:NSForegroundColorAttributeName];
     return [[NSAttributedString alloc] initWithString:txt attributes:attributes];;
 }
-- (CAAnimation *)imageAnimationForEmptyDataSet:(UIScrollView *)scrollView
+@end
+
+@implementation UIScrollView (HBEmptyView)
+#pragma mark -setter getter
+- (HBEmptyContentView *)emptyContentView
 {
-    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"transform"];
-    animation.fromValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
-    animation.toValue = [NSValue valueWithCATransform3D: CATransform3DMakeRotation(M_PI_2, 0.0, 0.0, 1.0) ];
-    animation.duration = 0.25;
-    animation.cumulative = YES;
-    animation.repeatCount = MAXFLOAT;
-    return animation;
-}
-- (void)removeEmptyView
-{
-    [self.emptyContentView removeFromSuperview];
-    self.scrollEnabled = YES;
-}
-#pragma mark -private
-#pragma mark - Delegate Getters & Events
-- (BOOL)emptyView_shouldDisplay
-{
-    if (self.emptyDataDelegate && [self.emptyDataDelegate respondsToSelector:@selector(emptyViewShouldDisplay:)]) {
-        return [self.emptyDataDelegate emptyViewShouldDisplay:self];
+    HBEmptyContentView * emptyContentView = objc_getAssociatedObject(self, kEmptyContentView);
+    if (!emptyContentView) {
+        emptyContentView =[HBEmptyContentView createEmptyContentView:(CGRect){0,0,self.frame.size.width,self.frame.size.height}];
+        __weak typeof(self) this =self;
+        emptyContentView.tagCallback = ^(id sender) {
+            [this startingTask];
+        };
+        emptyContentView.tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(startingTask)];
+        [emptyContentView addGestureRecognizer:emptyContentView.tapGesture];
+        objc_setAssociatedObject(self, kEmptyContentView,emptyContentView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    return YES;
+    return emptyContentView;
 }
-- (BOOL)emptyView_loading
+- (void)setEmptyContentView:(HBEmptyContentView *)emptyContentView
 {
-    if (self.emptyDataDelegate && [self.emptyDataDelegate respondsToSelector:@selector(emptyViewShouldAnimate:)]) {
-        return [self.emptyDataDelegate emptyViewShouldAnimate:self];
-    }
-    return NO;
+    objc_setAssociatedObject(self, kEmptyContentView,emptyContentView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-- (void)emptyView_didTapButton:(id)sender
+
+#pragma mark -public
+#pragma mark - 每次刷新数据后需要调用此接口更新UI
+
+- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)())task;
 {
-    if (self.emptyDataDelegate && [self.emptyDataDelegate respondsToSelector:@selector(emptyView:didTapButton:)]) {
-        [self.emptyDataDelegate emptyView:self didTapButton:sender];
+    self.emptyViewType=type;
+    self.emptyViewModel =nil;//重置模型
+    if(self.emptyViewModel){
+        if(task){
+            self.loadTask = task;
+        }
+        [self hookSelector:@selector(reloadData)];
     }
 }
-- (UIImage *)emptyView_image
+- (void)endLoading:(BOOL)showEmptyView delay:(CGFloat)delay
 {
-    if (self.emptyDataSource && [self.emptyDataSource respondsToSelector:@selector(imageForEmptyView:)]) {
-        return [self.emptyDataSource imageForEmptyView:self];
+    [self reloadEmptyView:NO];
+    if(!showEmptyView){
+        [self removeEmptyView:delay];
     }
-    return nil;
 }
-- (NSAttributedString *)emptyView_title
+- (void)endLoading:(BOOL)showEmptyView
 {
-    if (self.emptyDataSource && [self.emptyDataSource respondsToSelector:@selector(titleForEmptyView:)]) {
-        return [self.emptyDataSource titleForEmptyView:self];
+    [self reloadEmptyView:NO];
+    if(!showEmptyView){
+        [self removeEmptyView:0];
     }
-    return nil;
 }
-- (NSAttributedString *)emptyView_subtitle
+//配置模型(外部)
+- (void)configEmptyViewWithModel:(void(^)(HBEmptyScrollModel *))model
 {
-    if (self.emptyDataSource && [self.emptyDataSource respondsToSelector:@selector(subTitleForEmptyView:)]) {
-        return [self.emptyDataSource subTitleForEmptyView:self];
+    self.emptyViewModel =nil;//重置模型
+    if(self.emptyViewModel){
+        if(model){
+            model(self.emptyViewModel);
+        }
+        [self hookSelector:@selector(reloadData)];
     }
-    return nil;
+}
+#pragma mark - private
+#pragma mark -执行loading时的Task
+- (void)reloadEmptyView:(BOOL)animation
+{
+    if (![self haveIterm]){
+        self.emptyContentView.imageView.image =self.emptyViewModel.headImage;
+        self.emptyContentView.loadImageView.image =[UIImage hb_imagePathWithName:@"loading_image" targetClass:[self class]];
+        self.emptyContentView.titleLabel.attributedText =self.emptyViewModel.title;
+        self.emptyContentView.subTitleLabel.attributedText =self.emptyViewModel.subTitle;
+        if(self.emptyViewModel.showLoadingImage){
+            self.emptyContentView.loadImageView.hidden =NO;
+            animation?[self.emptyContentView.loadImageView.layer addAnimation:[self imageAnimationForEmptyDataSet:self] forKey:kEmptyImageViewAnimationKey]:[self.emptyContentView.loadImageView.layer removeAnimationForKey:kEmptyImageViewAnimationKey];
+        }else{
+            self.emptyContentView.loadImageView.hidden =YES;
+        }
+        self.scrollEnabled = NO;
+        [self addSubview:self.emptyContentView];
+    }
+}
+- (void)removeEmptyView:(CGFloat)delay
+{
+    [UIView animateWithDuration:0 delay:delay options:UIViewAnimationOptionCurveEaseInOut animations:^(){
+        
+    } completion:^(BOOL finished) {
+        [self.emptyContentView removeFromSuperview];
+        self.scrollEnabled = YES;
+    }];
+}
+- (void)startingTask
+{
+    [self reloadEmptyView:YES];
+    if(self.loadTask){
+        self.loadTask();
+    }
 }
 #pragma mark -iterms count
 - (BOOL)haveIterm
@@ -274,26 +282,36 @@ static const char * kEmptyViewType ="kEmptyViewType";
     }
     return have;
 }
+//loading图标动画
+- (CAAnimation *)imageAnimationForEmptyDataSet:(UIScrollView *)scrollView
+{
+    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"transform"];
+    animation.fromValue = [NSValue valueWithCATransform3D:CATransform3DIdentity];
+    animation.toValue = [NSValue valueWithCATransform3D: CATransform3DMakeRotation(M_PI_2, 0.0, 0.0, 1.0) ];
+    animation.duration = 0.25;
+    animation.cumulative = YES;
+    animation.repeatCount = MAXFLOAT;
+    return animation;
+}
 #pragma mark -(只在设置代理的时候采取hook)
 - (void)hookSelector:(SEL)selector
 {
     if (![self respondsToSelector:selector]) {
         return;
     }
-    //如果hook过的不需要再hook(method_setImplementation)
-    if (objc_getAssociatedObject(self, kEmptyReloadDataIMP)) {
+    //如果hook过的不需要再hook
+    if (_reloadDataIMP) {
         return;
     }
     Method method = class_getInstanceMethod([self class], selector);
     IMP dzn_newImplementation = method_setImplementation(method, (IMP)originalImplementation);
     NSValue *impValue =[NSValue valueWithPointer:dzn_newImplementation];
-    objc_setAssociatedObject(self, kEmptyReloadDataIMP,impValue, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    _reloadDataIMP = impValue;
 }
 void originalImplementation(id self, SEL _cmd)
 {
-    NSValue * impValue = objc_getAssociatedObject(self, kEmptyReloadDataIMP);
-    IMP impPointer = [impValue pointerValue];
-    [self reloadEmptyView];
+    IMP impPointer = [_reloadDataIMP pointerValue];
+    [self reloadEmptyView:NO];
     if (impPointer) {
         ((void(*)(id,SEL))impPointer)(self,_cmd);
     }
@@ -336,6 +354,8 @@ void originalImplementation(id self, SEL _cmd)
     NSString *path = [currentBundle pathForResource:name ofType:@"png" inDirectory:nil];
     return path ? [UIImage imageWithContentsOfFile:path] : nil;
 }
+@end
+@implementation HBEmptyScrollModel
 @end
 
 @implementation UIColor (HBEmptyView)

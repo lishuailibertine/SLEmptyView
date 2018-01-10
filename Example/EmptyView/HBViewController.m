@@ -8,10 +8,9 @@
 
 #import "HBViewController.h"
 #import "UIScrollView+HBEmptyView.h"
-
+#import <objc/runtime.h>
 @interface HBViewController ()
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic, getter=isLoading) BOOL loading;
 @end
 
 @implementation HBViewController
@@ -19,31 +18,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.tableView.emptyViewType =HBEmptyViewType_Network;
-    [self.tableView reloadData];
+    __weak typeof(self) this =self;
+    [self.tableView configEmptyViewWithType:HBEmptyViewType_Network loadingTask:^{
+        [this.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
+            model.showLoadingImage =YES;
+        }];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [this.tableView endLoading:YES];
+        });
+    }];
 	// Do any additional setup after loading the view, typically from a nib.
-}
-- (void)setLoading:(BOOL)loading
-{
-    if (self.isLoading == loading) {
-        return;
-    }
-    _loading = loading;
-    
-    [self.tableView reloadData];
-}
-//是否显示loading动画
-- (BOOL)emptyViewShouldAnimate:(UIScrollView *)scrollView
-{
-    return self.loading;
-}
-//加载按钮点击事件
-- (void)emptyView:(UIScrollView *)scrollView didTapButton:(UIButton *)button
-{
-    self.loading = YES;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.loading = NO;
-    });
 }
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {

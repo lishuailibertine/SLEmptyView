@@ -7,39 +7,42 @@
 
 #import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
-
-@protocol HBEmptyDataSource;
-@protocol HBEmptyDataDelegate;
-
+@class HBEmptyScrollModel;
 typedef NS_ENUM(NSInteger, HBEmptyViewType) {
     HBEmptyViewType_Network =1,//网络错误空白页
-    HBEmptyViewType_Interface =2//接口错误空白页
+    HBEmptyViewType_Interface =2,//接口错误空白页
+    HBEmptyViewType_Other =3//其他自定义source
 };
 @interface UIScrollView (HBEmptyView)
-@property (nonatomic, weak, nullable) IBOutlet id <HBEmptyDataSource> emptyDataSource;
-@property (nonatomic, weak, nullable) IBOutlet id <HBEmptyDataDelegate> emptyDataDelegate;
-@property (nonatomic, assign) HBEmptyViewType emptyViewType;
-//每次请求完接口再调用这个接口
-- (void)reloadEmptyView;
+/**
+ * 配置空白页类型点击空白页的任务Task
+ */
+- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)())task;
+/**
+ * task结束时需要调用此方法
+ * showEmptyView: task结束后，是否需要展示空白页
+ */
+- (void)endLoading:(BOOL)showEmptyView;
+
+- (void)endLoading:(BOOL)showEmptyView delay:(CGFloat)delay;
+/**
+ * 配置空白页数据源
+ * model: 配置数据的模型对象
+ */
+- (void)configEmptyViewWithModel:(void(^)(HBEmptyScrollModel *))model;
 @end
-
-@protocol HBEmptyDataSource <NSObject>
-
-//image(header)
-- (UIImage *)imageForEmptyView:(UIScrollView *)scrollView;
+@interface HBEmptyScrollModel :NSObject
 //title描述
-- (NSAttributedString *)titleForEmptyView:(UIScrollView *)scrollView;
+@property (nonatomic, strong) NSAttributedString *title;
 //详细描述
-- (NSAttributedString *)subTitleForEmptyView:(UIScrollView *)scrollView;
-@end
-@protocol HBEmptyDataDelegate <NSObject>
-
-//加载按钮点击事件
-- (void)emptyView:(UIScrollView *)scrollView didTapButton:(UIButton *)button;
-//是否需要展示空白页
-- (BOOL)emptyViewShouldDisplay:(UIScrollView *)scrollView;
-//是否显示loading动画
-- (BOOL)emptyViewShouldAnimate:(UIScrollView *)scrollView;
+@property (nonatomic, strong) NSAttributedString *subTitle;
+//显示loading imageView
+@property (nonatomic, strong) UIImage *loadingImage;
+//image(header)
+@property (nonatomic, strong) UIImage *headImage;
+//loading小图标是否展示(默认为NO)
+@property (nonatomic, assign) BOOL showLoadingImage;
 @end
 
 NS_ASSUME_NONNULL_END
+
