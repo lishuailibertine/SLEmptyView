@@ -41,7 +41,7 @@ typedef NS_ENUM(NSInteger, HBEmptyViewType) {
 ```
 
 ### 使用方法
-```objecttive-c
+```objective-c
 __weak typeof(self) this =self;
 //配置空白页数据源
 [self.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
