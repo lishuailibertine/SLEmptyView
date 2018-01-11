@@ -14,7 +14,7 @@
 
  >针对网络异常、接口异常会默认两种展示type(可以再新增),这样是为了对业务的定制性更高；
 
-### 接口定义
+### API定义
 ```objective-c
 //默认空白页类型
 typedef NS_ENUM(NSInteger, HBEmptyViewType) {
@@ -42,18 +42,18 @@ typedef NS_ENUM(NSInteger, HBEmptyViewType) {
 
 ### 使用方法
 ```objecttive-c
-	__weak typeof(self) this =self;
-    //配置空白页数据源
-    [self.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
-        model.showLoadingImage =YES;
-    }];
-    //配置空白页类型
-    [self.tableView configEmptyViewWithType:HBEmptyViewType_Network loadingTask:^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            //空白页状态更新
-            [this.tableView endLoading:YES];
-        });
-    }];
+__weak typeof(self) this =self;
+//配置空白页数据源
+[self.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
+      model.showLoadingImage =YES;
+}];
+配置空白页类型
+[self.tableView configEmptyViewWithType:HBEmptyViewType_Network loadingTask:^{
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+          //空白页状态更新
+          [this.tableView endLoading:YES];
+      });
+ }];
 ```
 
 ### 简单效果图
