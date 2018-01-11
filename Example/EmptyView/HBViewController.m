@@ -19,11 +19,14 @@
 {
     [super viewDidLoad];
     __weak typeof(self) this =self;
+    //配置空白页数据源
+    [self.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
+        model.showLoadingImage =YES;
+    }];
+    //配置空白页类型
     [self.tableView configEmptyViewWithType:HBEmptyViewType_Network loadingTask:^{
-        [this.tableView configEmptyViewWithModel:^(HBEmptyScrollModel * _Nonnull model) {
-            model.showLoadingImage =YES;
-        }];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            //空白页状态更新
             [this.tableView endLoading:YES];
         });
     }];

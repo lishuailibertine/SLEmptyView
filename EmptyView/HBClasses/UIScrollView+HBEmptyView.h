@@ -8,6 +8,7 @@
 #import <UIKit/UIKit.h>
 NS_ASSUME_NONNULL_BEGIN
 @class HBEmptyScrollModel;
+//默认空白页类型
 typedef NS_ENUM(NSInteger, HBEmptyViewType) {
     HBEmptyViewType_Network =1,//网络错误空白页
     HBEmptyViewType_Interface =2,//接口错误空白页
@@ -17,19 +18,17 @@ typedef NS_ENUM(NSInteger, HBEmptyViewType) {
 /**
  * 配置空白页类型点击空白页的任务Task
  */
-- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)())task;
-/**
- * task结束时需要调用此方法
- * showEmptyView: task结束后，是否需要展示空白页
- */
-- (void)endLoading:(BOOL)showEmptyView;
-
-- (void)endLoading:(BOOL)showEmptyView delay:(CGFloat)delay;
+- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)(void))task;
 /**
  * 配置空白页数据源
  * model: 配置数据的模型对象
  */
 - (void)configEmptyViewWithModel:(void(^)(HBEmptyScrollModel *))model;
+/**
+ * task结束时需要调用此方法
+ * showEmptyView: task结束后，是否需要展示空白页
+ */
+- (void)endLoading:(BOOL)showEmptyView;
 @end
 @interface HBEmptyScrollModel :NSObject
 //title描述

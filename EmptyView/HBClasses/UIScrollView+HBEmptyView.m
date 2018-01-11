@@ -165,7 +165,7 @@ typedef void(^LoadTask)(void);
 #pragma mark -public
 #pragma mark - 每次刷新数据后需要调用此接口更新UI
 
-- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)())task;
+- (void)configEmptyViewWithType:(HBEmptyViewType)type loadingTask:(void(^)(void))task
 {
     self.emptyViewType=type;
     self.emptyViewModel =nil;//重置模型
@@ -180,14 +180,14 @@ typedef void(^LoadTask)(void);
 {
     [self reloadEmptyView:NO];
     if(!showEmptyView){
-        [self removeEmptyView:delay];
+        [self removeEmptyView];
     }
 }
 - (void)endLoading:(BOOL)showEmptyView
 {
     [self reloadEmptyView:NO];
     if(!showEmptyView){
-        [self removeEmptyView:0];
+        [self removeEmptyView];
     }
 }
 //配置模型(外部)
@@ -220,14 +220,10 @@ typedef void(^LoadTask)(void);
         [self addSubview:self.emptyContentView];
     }
 }
-- (void)removeEmptyView:(CGFloat)delay
+- (void)removeEmptyView
 {
-    [UIView animateWithDuration:0 delay:delay options:UIViewAnimationOptionCurveEaseInOut animations:^(){
-        
-    } completion:^(BOOL finished) {
-        [self.emptyContentView removeFromSuperview];
-        self.scrollEnabled = YES;
-    }];
+    [self.emptyContentView removeFromSuperview];
+    self.scrollEnabled = YES;
 }
 - (void)startingTask
 {
@@ -291,6 +287,7 @@ typedef void(^LoadTask)(void);
     animation.duration = 0.25;
     animation.cumulative = YES;
     animation.repeatCount = MAXFLOAT;
+    animation.removedOnCompletion =NO;
     return animation;
 }
 #pragma mark -(只在设置代理的时候采取hook)
